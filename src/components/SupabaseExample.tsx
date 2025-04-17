@@ -1,20 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createBrowserClient } from "@/lib/supabase";
 
 interface TableData {
   id: string;
-  [key: string]: any;
+  created_at: string;
+  updated_at: string;
+  [key: string]: unknown;
 }
 
 export default function SupabaseExample() {
   const [data, setData] = useState<TableData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       try {
+        const supabase = createBrowserClient();
         const { data, error } = await supabase
           .from("your_table_name")
           .select("*");
@@ -23,20 +27,24 @@ export default function SupabaseExample() {
         setData(data || []);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setHasError(true);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
-    }
+    };
 
     fetchData();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
+  if (hasError) return <div>Error loading data</div>;
 
   return (
-    <div>
-      <h2>Supabase Data</h2>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4">Supabase Data</h2>
+      <pre className="bg-gray-100 p-4 rounded-lg overflow-auto">
+        {JSON.stringify(data, null, 2)}
+      </pre>
     </div>
   );
 }
